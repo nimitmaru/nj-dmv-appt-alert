@@ -1,6 +1,6 @@
 {
   "searchConfig": {
-    "maxDaysAhead": 15,
+    "maxDaysAhead": 10,
     "maxDatesPerLocation": 10
   },
   "rules": [

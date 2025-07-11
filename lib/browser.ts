@@ -34,10 +34,10 @@ export async function withPage<T>(
     // Set a reasonable viewport
     await page.setViewportSize({ width: 1280, height: 800 });
     
-    // Navigate with timeout
+    // Navigate with faster loading strategy
     await page.goto(url, { 
-      waitUntil: 'networkidle',
-      timeout: 30000 
+      waitUntil: 'domcontentloaded', // Faster than networkidle
+      timeout: 20000 
     });
     
     return await callback(page);
