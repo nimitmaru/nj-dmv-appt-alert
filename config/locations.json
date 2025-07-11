@@ -2,5 +2,10 @@
   { "name": "Edison", "id": 52 },
   { "name": "Rahway", "id": 60 },
   { "name": "Newark", "id": 56 },
-  { "name": "Paterson", "id": 59 }
-]
+  { "name": "Paterson", "id": 59 },
+  { "name": "South Plainfield", "id": 63 },
+  { "name": "Elizabeth", "id": 263 },
+  { "name": "Randolph", "id": 61 },
+  { "name": "Bayonne", "id": 47  },
+  { "name": "Wayne", "id": 67 }
+] 

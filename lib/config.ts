@@ -30,7 +30,7 @@ export function loadMonitoringRules(): MonitoringConfig {
     // Ensure searchConfig exists
     if (!config.searchConfig) {
       config.searchConfig = {
-        maxDaysAhead: 21,
+        maxDaysAhead: 15,
         maxDatesPerLocation: 10
       };
     }
@@ -41,7 +41,7 @@ export function loadMonitoringRules(): MonitoringConfig {
     // Fallback to default rules
     return {
       searchConfig: {
-        maxDaysAhead: 21,
+        maxDaysAhead: 15,
         maxDatesPerLocation: 10
       },
       rules: [

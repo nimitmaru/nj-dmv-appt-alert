@@ -46,10 +46,7 @@ export class DMVChecker {
       }
 
       // Get search configuration
-      const searchConfig = this.monitoringConfig.searchConfig || {
-        maxDaysAhead: 21,
-        maxDatesPerLocation: 10
-      };
+      const searchConfig = this.monitoringConfig.searchConfig;
       
       let totalDatesFound = 0;
       const maxDates = searchConfig.maxDatesPerLocation;
@@ -98,20 +95,23 @@ export class DMVChecker {
           continue;
         }
         
-        // Check if we should stop looking at this month
-        const firstOfMonth = new Date(year, monthIndex, 1);
-        if (firstOfMonth > maxDate) {
-          console.log(`Month ${monthYearText} is beyond maxDaysAhead limit, stopping`);
-          shouldContinue = false;
-          break;
-        }
-
         // Check each available date
+        let datesCheckedInMonth = 0;
+        let datesSkippedInMonth = 0;
+        
         for (const dayStr of availableDates) {
           const day = parseInt(dayStr);
           if (isNaN(day)) continue;
 
           const date = new Date(year, monthIndex, day);
+          
+          // Skip this specific date if it's beyond maxDaysAhead
+          if (date > maxDate) {
+            datesSkippedInMonth++;
+            continue;
+          }
+          
+          datesCheckedInMonth++;
           const dayOfWeek = format(date, 'EEEE');
           const formattedDate = format(date, 'MM/dd/yyyy');
 
@@ -181,6 +181,13 @@ export class DMVChecker {
               console.log(`No time slots found for ${formattedDate} at ${location.name}`);
             }
           }
+        }
+        
+        // Log what happened in this month
+        if (datesSkippedInMonth > 0 && datesCheckedInMonth === 0) {
+          console.log(`All ${datesSkippedInMonth} dates in ${monthYearText} are beyond maxDaysAhead limit`);
+          shouldContinue = false;
+          break;
         }
         
         // Stop checking more months if we've found enough dates
