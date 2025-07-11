@@ -34,36 +34,30 @@ Edit `config/monitoring-rules.json` to customize when to look for appointments:
 ```json
 {
   "searchConfig": {
-    "maxWeeksAhead": 3,          // Maximum weeks to look ahead
+    "maxDaysAhead": 21,          // Look up to 21 days in the future
     "maxDatesPerLocation": 10,   // Max dates to find per location
     "monthsToCheck": 2           // How many months to browse in calendar
   },
   "rules": [
     {
-      "name": "Next 3 Weekends",
+      "name": "Weekend Appointments",
       "enabled": true,
       "days": ["Saturday", "Sunday"],
-      "timeRanges": ["all"],
-      "dateRange": {
-        "type": "relative",
-        "value": "next-3-weekends"
-      }
+      "timeRanges": ["all"]
     }
   ]
 }
 ```
 
-#### Date Range Options
+#### Configuration Options
 
-1. **Relative Ranges:**
-   - `"type": "relative", "value": "next-3-weekends"` - Next 3 weekends only
-   - `"type": "relative", "value": "next-month"` - All dates in next month
-
-2. **Days Ahead:**
-   - `"type": "days-ahead", "value": 30` - Next 30 days
-
-3. **Absolute Range:**
-   - `"type": "absolute", "start": "2025-08-01", "end": "2025-08-15"` - Specific date range
+1. **maxDaysAhead**: Controls how far in the future to look (e.g., 14 for 2 weeks, 21 for 3 weeks)
+2. **days**: Which days of the week to check (e.g., ["Saturday", "Sunday"] for weekends)
+3. **timeRanges**: What times to look for:
+   - `"all"` - Any time
+   - `"morning"` - 8:00 AM - 12:00 PM
+   - `"afternoon"` - 12:00 PM - 5:00 PM
+   - `"15:00-18:00"` - Custom time range
 
 ## Local Development
 

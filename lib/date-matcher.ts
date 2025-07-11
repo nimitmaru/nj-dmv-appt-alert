@@ -1,5 +1,5 @@
-import { format, parse, isWithinInterval, isWeekend, getDay, addDays, startOfWeek, endOfWeek, addWeeks, startOfMonth, endOfMonth, addMonths } from 'date-fns';
-import type { MonitoringConfig, MonitoringRule, DateRange } from './types';
+import { format, parse, isWithinInterval, isWeekend, getDay, addDays } from 'date-fns';
+import type { MonitoringConfig, MonitoringRule } from './types';
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -20,13 +20,20 @@ export function isDateMatchingRules(dateStr: string, config: MonitoringConfig): 
     return false;
   }
 
+  // First check if date is within the global max days ahead limit
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const maxDate = addDays(today, config.searchConfig.maxDaysAhead);
+  if (date > maxDate) {
+    return false;
+  }
+  
   // Check each enabled rule
   for (const rule of config.rules) {
     if (!rule.enabled) continue;
     
-    if (isDayMatching(date, rule) && 
-        isTimeMatching(date, rule, config) && 
-        isDateInRange(date, rule.dateRange)) {
+    if (isDayMatching(date, rule) && isTimeMatching(date, rule, config)) {
       return true;
     }
   }
@@ -80,63 +87,4 @@ export function isWeekendDate(dateStr: string): boolean {
 
 export function formatAppointmentDate(date: Date): string {
   return format(date, 'EEEE, MMMM d, yyyy');
-}
-
-function isDateInRange(date: Date, dateRange?: DateRange): boolean {
-  if (!dateRange) return true; // No range specified means all dates are valid
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  switch (dateRange.type) {
-    case 'relative':
-      if (dateRange.value === 'next-3-weekends') {
-        return isInNextNWeekends(date, 3);
-      } else if (dateRange.value === 'next-month') {
-        const nextMonth = addMonths(today, 1);
-        return date >= startOfMonth(nextMonth) && date <= endOfMonth(nextMonth);
-      }
-      break;
-      
-    case 'days-ahead':
-      const daysAhead = typeof dateRange.value === 'number' ? dateRange.value : parseInt(dateRange.value as string);
-      const maxDate = addDays(today, daysAhead);
-      return date >= today && date <= maxDate;
-      
-    case 'absolute':
-      if (dateRange.start && dateRange.end) {
-        const startDate = new Date(dateRange.start);
-        const endDate = new Date(dateRange.end);
-        return date >= startDate && date <= endDate;
-      }
-      break;
-  }
-  
-  return true;
-}
-
-function isInNextNWeekends(date: Date, n: number): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // Find the next weekend (or current if today is weekend)
-  let currentDate = new Date(today);
-  while (!isWeekend(currentDate)) {
-    currentDate = addDays(currentDate, 1);
-  }
-  
-  // Get the start of this weekend
-  const firstWeekendStart = currentDate.getDay() === 0 ? addDays(currentDate, -1) : currentDate;
-  
-  // Check n weekends
-  for (let i = 0; i < n; i++) {
-    const weekendStart = addWeeks(firstWeekendStart, i);
-    const weekendEnd = addDays(weekendStart, 1);
-    
-    if (date >= weekendStart && date <= weekendEnd) {
-      return true;
-    }
-  }
-  
-  return false;
 }

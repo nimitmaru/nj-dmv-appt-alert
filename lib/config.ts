@@ -30,7 +30,7 @@ export function loadMonitoringRules(): MonitoringConfig {
     // Ensure searchConfig exists
     if (!config.searchConfig) {
       config.searchConfig = {
-        maxWeeksAhead: 3,
+        maxDaysAhead: 21,
         maxDatesPerLocation: 10,
         monthsToCheck: 2
       };
@@ -42,20 +42,16 @@ export function loadMonitoringRules(): MonitoringConfig {
     // Fallback to default rules
     return {
       searchConfig: {
-        maxWeeksAhead: 3,
+        maxDaysAhead: 21,
         maxDatesPerLocation: 10,
         monthsToCheck: 2
       },
       rules: [
         {
-          name: 'Next 3 Weekends',
+          name: 'Weekend Appointments',
           enabled: true,
           days: ['Saturday', 'Sunday'],
-          timeRanges: ['all'],
-          dateRange: {
-            type: 'relative',
-            value: 'next-3-weekends'
-          }
+          timeRanges: ['all']
         }
       ],
       presets: {

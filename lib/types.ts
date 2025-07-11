@@ -12,23 +12,15 @@ export interface Appointment {
   url: string;
 }
 
-export interface DateRange {
-  type: 'relative' | 'days-ahead' | 'absolute';
-  value?: string | number;
-  start?: string;
-  end?: string;
-}
-
 export interface MonitoringRule {
   name: string;
   enabled: boolean;
   days: string[];
   timeRanges: string[];
-  dateRange?: DateRange;
 }
 
 export interface SearchConfig {
-  maxWeeksAhead: number;
+  maxDaysAhead: number;
   maxDatesPerLocation: number;
   monthsToCheck: number;
 }
