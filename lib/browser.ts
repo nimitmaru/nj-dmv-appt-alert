@@ -46,7 +46,15 @@ export async function withPage<T>(
     console.error(`Error processing page ${url}:`, error);
     throw error;
   } finally {
-    await page.close();
-    await browser.close();
+    try {
+      await page.close();
+    } catch (e) {
+      console.error('Error closing page:', e);
+    }
+    try {
+      await browser.close();
+    } catch (e) {
+      console.error('Error closing browser:', e);
+    }
   }
 }

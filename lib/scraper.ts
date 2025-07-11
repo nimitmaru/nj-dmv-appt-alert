@@ -76,8 +76,8 @@ export class DMVChecker {
     return withPage(url, async (page) => {
       const appointments: Appointment[] = [];
 
-      // Wait for the pickmeup calendar to load
       try {
+        // Wait for the pickmeup calendar to load
         await page.waitForSelector('#cal-picker', { timeout: timeouts.calendarLoad });
         
         // Wait for available dates to appear (smarter than fixed timeout)
@@ -85,11 +85,12 @@ export class DMVChecker {
           const buttons = document.querySelectorAll('.pmu-days .pmu-button:not(.pmu-disabled)');
           return buttons.length > 0;
         }, { timeout: timeouts.dateAvailability });
-        
       } catch (error) {
-        console.log(`Calendar not found for ${location.name}`);
+        console.log(`Calendar not found or no dates available for ${location.name}`);
         return appointments;
       }
+
+      try {
 
       // Get search configuration
       const searchConfig = this.monitoringConfig.searchConfig;
@@ -253,6 +254,10 @@ export class DMVChecker {
       }
 
       return appointments;
+      } catch (error: any) {
+        console.error(`Error processing ${location.name} after calendar loaded:`, error.message);
+        return appointments;
+      }
     }, timeouts.pageLoad);
   }
 }
