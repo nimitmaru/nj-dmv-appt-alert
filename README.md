@@ -35,8 +35,7 @@ Edit `config/monitoring-rules.json` to customize when to look for appointments:
 {
   "searchConfig": {
     "maxDaysAhead": 21,          // Look up to 21 days in the future
-    "maxDatesPerLocation": 10,   // Max dates to find per location
-    "monthsToCheck": 2           // How many months to browse in calendar
+    "maxDatesPerLocation": 10    // Max dates to find per location
   },
   "rules": [
     {

@@ -2,7 +2,7 @@ import { withPage } from './browser';
 import { isDateMatchingRules } from './date-matcher';
 import { getMonitoringConfig } from './config';
 import type { DMVLocation, Appointment } from './types';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 export class DMVChecker {
   private baseUrl = 'https://telegov.njportal.com/njmvc/AppointmentWizard/7';
@@ -47,15 +47,21 @@ export class DMVChecker {
 
       // Get search configuration
       const searchConfig = this.monitoringConfig.searchConfig || {
-        monthsToCheck: 2,
+        maxDaysAhead: 21,
         maxDatesPerLocation: 10
       };
       
       let totalDatesFound = 0;
       const maxDates = searchConfig.maxDatesPerLocation;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const maxDate = addDays(today, searchConfig.maxDaysAhead);
       
-      // Check multiple months based on configuration
-      for (let monthOffset = 0; monthOffset < searchConfig.monthsToCheck && totalDatesFound < maxDates; monthOffset++) {
+      // Check months until we exceed maxDaysAhead
+      let monthOffset = 0;
+      let shouldContinue = true;
+      
+      while (shouldContinue && totalDatesFound < maxDates) {
         // Navigate to the month if needed
         if (monthOffset > 0) {
           await page.click('.pmu-next');
@@ -72,6 +78,8 @@ export class DMVChecker {
           buttons => buttons.map(btn => btn.textContent?.trim() || '')
         );
 
+        console.log(`Available dates in ${monthYearText}: ${availableDates.join(', ')}`);
+
         if (availableDates.length === 0) {
           console.log(`No available dates in ${monthYearText} at ${location.name}`);
           continue;
@@ -86,7 +94,16 @@ export class DMVChecker {
 
         if (monthIndex === -1 || isNaN(year)) {
           console.error(`Failed to parse month/year: ${monthYearText}`);
+          monthOffset++;
           continue;
+        }
+        
+        // Check if we should stop looking at this month
+        const firstOfMonth = new Date(year, monthIndex, 1);
+        if (firstOfMonth > maxDate) {
+          console.log(`Month ${monthYearText} is beyond maxDaysAhead limit, stopping`);
+          shouldContinue = false;
+          break;
         }
 
         // Check each available date
@@ -99,7 +116,10 @@ export class DMVChecker {
           const formattedDate = format(date, 'MM/dd/yyyy');
 
           // Check if this date matches our monitoring rules
-          if (isDateMatchingRules(formattedDate, this.monitoringConfig)) {
+          const matchesRules = isDateMatchingRules(formattedDate, this.monitoringConfig);
+          if (!matchesRules) {
+            console.log(`Date ${formattedDate} (${dayOfWeek}) does NOT match rules`);
+          } else {
             console.log(`Date ${formattedDate} (${dayOfWeek}) matches monitoring rules`);
             
             // Click on the date
@@ -167,6 +187,8 @@ export class DMVChecker {
         if (totalDatesFound >= maxDates) {
           break;
         }
+        
+        monthOffset++;
       }
 
       return appointments;

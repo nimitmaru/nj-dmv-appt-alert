@@ -31,8 +31,7 @@ export function loadMonitoringRules(): MonitoringConfig {
     if (!config.searchConfig) {
       config.searchConfig = {
         maxDaysAhead: 21,
-        maxDatesPerLocation: 10,
-        monthsToCheck: 2
+        maxDatesPerLocation: 10
       };
     }
     
@@ -43,8 +42,7 @@ export function loadMonitoringRules(): MonitoringConfig {
     return {
       searchConfig: {
         maxDaysAhead: 21,
-        maxDatesPerLocation: 10,
-        monthsToCheck: 2
+        maxDatesPerLocation: 10
       },
       rules: [
         {

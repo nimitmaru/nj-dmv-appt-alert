@@ -1,8 +1,7 @@
 {
   "searchConfig": {
     "maxDaysAhead": 21,
-    "maxDatesPerLocation": 10,
-    "monthsToCheck": 2
+    "maxDatesPerLocation": 10
   },
   "rules": [
     {

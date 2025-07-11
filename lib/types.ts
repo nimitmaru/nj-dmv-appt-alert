@@ -22,7 +22,6 @@ export interface MonitoringRule {
 export interface SearchConfig {
   maxDaysAhead: number;
   maxDatesPerLocation: number;
-  monthsToCheck: number;
 }
 
 export interface MonitoringConfig {
