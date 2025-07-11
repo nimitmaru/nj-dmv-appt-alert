@@ -6,6 +6,6 @@
   { "name": "Wayne", "id": 67 },
   { "name": "Randolph", "id": 61 },
   { "name": "Bayonne", "id": 47 },
-  { "name": "South Plainfield", "id": 63, "skip": true },
-  { "name": "Elizabeth", "id": 263, "skip": true }
+  { "name": "South Plainfield", "id": 63 },
+  { "name": "Elizabeth", "id": 263 }
 ] 

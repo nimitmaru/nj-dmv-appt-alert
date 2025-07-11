@@ -12,7 +12,7 @@ export class DMVChecker {
 
   async checkAllLocations(): Promise<Appointment[]> {
     const appointments: Appointment[] = [];
-    const BATCH_SIZE = 2; // Process 2 locations concurrently (safer for resource limits)
+    const BATCH_SIZE = 1; // Process 2 locations concurrently (safer for resource limits)
 
     // Process locations in batches
     for (let i = 0; i < this.locations.length; i += BATCH_SIZE) {
@@ -20,12 +20,26 @@ export class DMVChecker {
       console.log(`Processing batch: ${batch.map(l => l.name).join(', ')}`);
       
       const batchResults = await Promise.allSettled(
-        batch.map(location => 
-          this.checkLocation(location).catch(error => {
-            console.error(`Error checking ${location.name}:`, error.message);
-            return []; // Return empty array on error
-          })
-        )
+        batch.map(async location => {
+          try {
+            // First attempt
+            return await this.checkLocation(location);
+          } catch (error: any) {
+            console.error(`Error checking ${location.name} (attempt 1):`, error.message);
+            
+            // Retry once after a delay
+            console.log(`Retrying ${location.name} after 2 seconds...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            try {
+              return await this.checkLocation(location);
+            } catch (retryError: any) {
+              console.error(`Error checking ${location.name} (attempt 2):`, retryError.message);
+              console.log(`Skipping ${location.name} after 2 failed attempts`);
+              return []; // Return empty array on error
+            }
+          }
+        })
       );
       
       // Collect successful results
@@ -122,8 +136,8 @@ export class DMVChecker {
           monthOffset++;
           continue;
         }
-        const monthName = parts[0];
-        const yearStr = parts[1];
+        const monthName = parts[0] || '';
+        const yearStr = parts[1] || '';
         const monthIndex = ['January', 'February', 'March', 'April', 'May', 'June', 
                            'July', 'August', 'September', 'October', 'November', 'December']
                            .indexOf(monthName);
