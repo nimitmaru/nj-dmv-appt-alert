@@ -1,6 +1,7 @@
 export interface DMVLocation {
   name: string;
   id: number;
+  skip?: boolean;
 }
 
 export interface Appointment {
@@ -24,8 +25,17 @@ export interface SearchConfig {
   maxDatesPerLocation: number;
 }
 
+export interface TimeoutConfig {
+  pageLoad: number;
+  calendarLoad: number;
+  dateAvailability: number;
+  timeSlotLoad: number;
+  betweenBatches: number;
+}
+
 export interface MonitoringConfig {
   searchConfig: SearchConfig;
+  timeouts?: TimeoutConfig;
   rules: MonitoringRule[];
   presets: Record<string, string>;
 }

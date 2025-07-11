@@ -3,6 +3,13 @@
     "maxDaysAhead": 10,
     "maxDatesPerLocation": 10
   },
+  "timeouts": {
+    "pageLoad": 30000,
+    "calendarLoad": 10000,
+    "dateAvailability": 3000,
+    "timeSlotLoad": 1500,
+    "betweenBatches": 1000
+  },
   "rules": [
     {
       "name": "Weekend Appointments",

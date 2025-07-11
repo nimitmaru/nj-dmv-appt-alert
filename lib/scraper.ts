@@ -12,7 +12,7 @@ export class DMVChecker {
 
   async checkAllLocations(): Promise<Appointment[]> {
     const appointments: Appointment[] = [];
-    const BATCH_SIZE = 3; // Process 3 locations concurrently
+    const BATCH_SIZE = 2; // Process 2 locations concurrently (safer for resource limits)
 
     // Process locations in batches
     for (let i = 0; i < this.locations.length; i += BATCH_SIZE) {
@@ -20,7 +20,12 @@ export class DMVChecker {
       console.log(`Processing batch: ${batch.map(l => l.name).join(', ')}`);
       
       const batchResults = await Promise.allSettled(
-        batch.map(location => this.checkLocation(location))
+        batch.map(location => 
+          this.checkLocation(location).catch(error => {
+            console.error(`Error checking ${location.name}:`, error.message);
+            return []; // Return empty array on error
+          })
+        )
       );
       
       // Collect successful results
@@ -34,7 +39,8 @@ export class DMVChecker {
       
       // Small delay between batches (not locations)
       if (i + BATCH_SIZE < this.locations.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const timeouts = this.monitoringConfig.timeouts || { betweenBatches: 1000 };
+        await new Promise(resolve => setTimeout(resolve, timeouts.betweenBatches));
       }
     }
 
@@ -45,18 +51,26 @@ export class DMVChecker {
     const url = `${this.baseUrl}/${location.id}`;
     console.log(`Checking ${location.name} at ${url}`);
     
+    const timeouts = this.monitoringConfig.timeouts || {
+      pageLoad: 20000,
+      calendarLoad: 10000,
+      dateAvailability: 3000,
+      timeSlotLoad: 1500,
+      betweenBatches: 1000
+    };
+    
     return withPage(url, async (page) => {
       const appointments: Appointment[] = [];
 
       // Wait for the pickmeup calendar to load
       try {
-        await page.waitForSelector('#cal-picker', { timeout: 10000 });
+        await page.waitForSelector('#cal-picker', { timeout: timeouts.calendarLoad });
         
         // Wait for available dates to appear (smarter than fixed timeout)
         await page.waitForFunction(() => {
           const buttons = document.querySelectorAll('.pmu-days .pmu-button:not(.pmu-disabled)');
           return buttons.length > 0;
-        }, { timeout: 3000 });
+        }, { timeout: timeouts.dateAvailability });
         
       } catch (error) {
         console.log(`Calendar not found for ${location.name}`);
@@ -97,11 +111,19 @@ export class DMVChecker {
 
         if (availableDates.length === 0) {
           console.log(`No available dates in ${monthYearText} at ${location.name}`);
+          monthOffset++;
           continue;
         }
 
         // Parse month and year
-        const [monthName, yearStr] = monthYearText.split(',').map(s => s.trim());
+        const parts = monthYearText.split(',').map(s => s.trim());
+        if (parts.length < 2) {
+          console.error(`Invalid month/year format: ${monthYearText}`);
+          monthOffset++;
+          continue;
+        }
+        const monthName = parts[0];
+        const yearStr = parts[1];
         const monthIndex = ['January', 'February', 'March', 'April', 'May', 'June', 
                            'July', 'August', 'September', 'October', 'November', 'December']
                            .indexOf(monthName);
@@ -143,7 +165,7 @@ export class DMVChecker {
             // Click on the date
             const dateClicked = await page.evaluate((targetDay) => {
               const buttons = document.querySelectorAll('.pmu-days .pmu-button');
-              for (const button of buttons) {
+              for (const button of Array.from(buttons)) {
                 if (button.textContent?.trim() === targetDay && 
                     !button.classList.contains('pmu-disabled') &&
                     !button.classList.contains('pmu-not-in-month')) {
@@ -159,8 +181,8 @@ export class DMVChecker {
               continue;
             }
 
-            // Wait for time slots to load (reduced from 3000ms)
-            await page.waitForTimeout(1500);
+            // Wait for time slots to load
+            await page.waitForTimeout(timeouts.timeSlotLoad);
 
             // Extract time slots - they appear as divs with class "timeCard availableTimeslot"
             const timeSlotData = await page.$$eval(
@@ -217,6 +239,6 @@ export class DMVChecker {
       }
 
       return appointments;
-    });
+    }, timeouts.pageLoad);
   }
 }

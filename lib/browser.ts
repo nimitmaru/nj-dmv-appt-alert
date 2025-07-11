@@ -25,7 +25,8 @@ export async function getBrowser(): Promise<Browser> {
 
 export async function withPage<T>(
   url: string,
-  callback: (page: Page) => Promise<T>
+  callback: (page: Page) => Promise<T>,
+  pageLoadTimeout: number = 20000
 ): Promise<T> {
   const browser = await getBrowser();
   const page = await browser.newPage();
@@ -37,7 +38,7 @@ export async function withPage<T>(
     // Navigate with faster loading strategy
     await page.goto(url, { 
       waitUntil: 'domcontentloaded', // Faster than networkidle
-      timeout: 20000 
+      timeout: pageLoadTimeout 
     });
     
     return await callback(page);

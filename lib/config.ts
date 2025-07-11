@@ -35,6 +35,17 @@ export function loadMonitoringRules(): MonitoringConfig {
       };
     }
     
+    // Set default timeouts if not provided
+    if (!config.timeouts) {
+      config.timeouts = {
+        pageLoad: 20000,
+        calendarLoad: 10000,
+        dateAvailability: 3000,
+        timeSlotLoad: 1500,
+        betweenBatches: 1000
+      };
+    }
+    
     return config as MonitoringConfig;
   } catch (error) {
     console.error('Failed to load monitoring rules:', error);
@@ -43,6 +54,13 @@ export function loadMonitoringRules(): MonitoringConfig {
       searchConfig: {
         maxDaysAhead: 15,
         maxDatesPerLocation: 10
+      },
+      timeouts: {
+        pageLoad: 20000,
+        calendarLoad: 10000,
+        dateAvailability: 3000,
+        timeSlotLoad: 1500,
+        betweenBatches: 1000
       },
       rules: [
         {
@@ -64,14 +82,21 @@ export const MONITORING_CONFIG = loadMonitoringRules();
 
 // For Vercel deployment, we'll use environment variables as override
 export function getDMVLocations(): DMVLocation[] {
+  let locations: DMVLocation[];
+  
   if (process.env.DMV_LOCATIONS) {
     try {
-      return JSON.parse(process.env.DMV_LOCATIONS);
+      locations = JSON.parse(process.env.DMV_LOCATIONS);
     } catch (error) {
       console.error('Failed to parse DMV_LOCATIONS env var:', error);
+      locations = DMV_LOCATIONS;
     }
+  } else {
+    locations = DMV_LOCATIONS;
   }
-  return DMV_LOCATIONS;
+  
+  // Filter out skipped locations
+  return locations.filter(loc => !loc.skip);
 }
 
 export function getMonitoringConfig(): MonitoringConfig {
