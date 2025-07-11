@@ -1,0 +1,57 @@
+{
+  "searchConfig": {
+    "maxWeeksAhead": 3,
+    "maxDatesPerLocation": 10,
+    "monthsToCheck": 2
+  },
+  "rules": [
+    {
+      "name": "Next 3 Weekends",
+      "enabled": true,
+      "days": ["Saturday", "Sunday"],
+      "timeRanges": ["all"],
+      "dateRange": {
+        "type": "relative",
+        "value": "next-3-weekends"
+      }
+    },
+    {
+      "name": "Any Weekend in Next Month",
+      "enabled": false,
+      "days": ["Saturday", "Sunday"],
+      "timeRanges": ["all"],
+      "dateRange": {
+        "type": "relative",
+        "value": "next-month"
+      }
+    },
+    {
+      "name": "Friday Late Afternoon",
+      "enabled": false,
+      "days": ["Friday"],
+      "timeRanges": ["15:00-18:00"],
+      "dateRange": {
+        "type": "days-ahead",
+        "value": 30
+      }
+    },
+    {
+      "name": "Specific Date Range",
+      "enabled": false,
+      "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      "timeRanges": ["all"],
+      "dateRange": {
+        "type": "absolute",
+        "start": "2025-08-01",
+        "end": "2025-08-15"
+      }
+    }
+  ],
+  "presets": {
+    "morning": "08:00-12:00",
+    "afternoon": "12:00-17:00",
+    "evening": "17:00-20:00",
+    "business_hours": "09:00-17:00",
+    "all": "00:00-23:59"
+  }
+}

@@ -1,0 +1,54 @@
+export interface DMVLocation {
+  name: string;
+  id: number;
+}
+
+export interface Appointment {
+  location: string;
+  locationId: number;
+  date: string;
+  dayOfWeek: string;
+  times: string[];
+  url: string;
+}
+
+export interface DateRange {
+  type: 'relative' | 'days-ahead' | 'absolute';
+  value?: string | number;
+  start?: string;
+  end?: string;
+}
+
+export interface MonitoringRule {
+  name: string;
+  enabled: boolean;
+  days: string[];
+  timeRanges: string[];
+  dateRange?: DateRange;
+}
+
+export interface SearchConfig {
+  maxWeeksAhead: number;
+  maxDatesPerLocation: number;
+  monthsToCheck: number;
+}
+
+export interface MonitoringConfig {
+  searchConfig: SearchConfig;
+  rules: MonitoringRule[];
+  presets: Record<string, string>;
+}
+
+export interface NotificationRecord {
+  appointmentKey: string;
+  sentAt: Date;
+  expiresAt: Date;
+}
+
+export interface CheckResult {
+  success: boolean;
+  appointments: Appointment[];
+  timestamp: Date;
+  locationsChecked: number;
+  error?: string;
+}

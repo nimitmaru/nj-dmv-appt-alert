@@ -1,0 +1,21 @@
+{
+  "name": "njdmvappt",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^24.0.13",
+    "@vercel/node": "^5.3.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^138.0.1",
+    "@vercel/kv": "^3.0.0",
+    "date-fns": "^4.1.0",
+    "playwright-core": "^1.54.1",
+    "resend": "^4.6.0"
+  }
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NJ DMV Appointment Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">NJ DMV Appointment Monitor</h1>
+    
+    <!-- Status Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">System Status</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center">
+          <p class="text-gray-600">Check Interval</p>
+          <p class="text-2xl font-bold text-blue-600">Every 5 min</p>
+        </div>
+        <div class="text-center">
+          <p class="text-gray-600">Locations Monitored</p>
+          <p class="text-2xl font-bold text-blue-600">4</p>
+        </div>
+        <div class="text-center">
+          <p class="text-gray-600">Appointment Type</p>
+          <p class="text-2xl font-bold text-blue-600">Out of State Transfer</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Check -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Manual Check</h2>
+      <div class="flex gap-4 items-end">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Location (optional)
+          </label>
+          <select id="locationSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            <option value="">All Locations</option>
+            <option value="52">Edison</option>
+            <option value="60">Rahway</option>
+            <option value="56">Newark</option>
+            <option value="59">Paterson</option>
+          </select>
+        </div>
+        <button 
+          onclick="checkNow()" 
+          id="checkButton"
+          class="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+        >
+          Check Now
+        </button>
+      </div>
+      <div id="checkStatus" class="mt-4 text-sm text-gray-600"></div>
+    </div>
+
+    <!-- Results -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Check Results</h2>
+      <div id="results" class="text-gray-600">
+        <p>Click "Check Now" to see current appointment availability</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function checkNow() {
+      const button = document.getElementById('checkButton');
+      const status = document.getElementById('checkStatus');
+      const results = document.getElementById('results');
+      const locationSelect = document.getElementById('locationSelect');
+      
+      button.disabled = true;
+      status.textContent = 'Checking appointments...';
+      results.innerHTML = '<p class="text-gray-500">Loading...</p>';
+      
+      try {
+        const apiKey = localStorage.getItem('apiKey') || prompt('Enter API key (leave empty if not configured):');
+        if (apiKey) {
+          localStorage.setItem('apiKey', apiKey);
+        }
+        
+        const headers = {};
+        if (apiKey) {
+          headers['x-api-key'] = apiKey;
+        }
+        
+        const location = locationSelect.value;
+        const url = location ? `/api/manual-check?location=${location}` : '/api/manual-check';
+        
+        const response = await fetch(url, { headers });
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Check failed');
+        }
+        
+        displayResults(data);
+      } catch (error) {
+        results.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+      } finally {
+        button.disabled = false;
+        status.textContent = '';
+      }
+    }
+    
+    function displayResults(data) {
+      const results = document.getElementById('results');
+      
+      if (!data.success) {
+        results.innerHTML = `<p class="text-red-600">Check failed: ${data.error || 'Unknown error'}</p>`;
+        return;
+      }
+      
+      if (data.appointments.length === 0) {
+        results.innerHTML = `
+          <p class="text-gray-600">No weekend appointments found</p>
+          <p class="text-sm text-gray-500 mt-2">
+            Checked ${data.locationsChecked} location(s) in ${data.duration}
+          </p>
+        `;
+        return;
+      }
+      
+      const appointmentsHtml = data.appointments.map(appt => `
+        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+          <h3 class="font-semibold text-lg mb-2">📍 ${appt.location}</h3>
+          <p class="text-gray-700 mb-1">
+            <span class="font-medium">Date:</span> ${appt.date} (${appt.dayOfWeek})
+          </p>
+          <p class="text-gray-700 mb-2">
+            <span class="font-medium">Times:</span> ${appt.times.join(', ')}
+          </p>
+          <a 
+            href="${appt.url}" 
+            target="_blank"
+            class="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Book Appointment →
+          </a>
+        </div>
+      `).join('');
+      
+      results.innerHTML = `
+        <div class="mb-4">
+          <p class="text-green-600 font-semibold">
+            Found ${data.appointments.length} appointment(s)!
+          </p>
+          <p class="text-sm text-gray-500">
+            Checked ${data.locationsChecked} location(s) in ${data.duration}
+          </p>
+        </div>
+        ${appointmentsHtml}
+      `;
+    }
+  </script>
+</body>
+</html>

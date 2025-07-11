@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/cron/check-dmv.ts": {
+      "maxDuration": 60
+    },
+    "api/manual-check.ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/check-dmv",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

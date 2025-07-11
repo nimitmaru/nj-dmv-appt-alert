@@ -1,0 +1,92 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import type { DMVLocation, MonitoringConfig } from './types';
+
+const configDir = join(process.cwd(), 'config');
+
+export function loadDMVLocations(): DMVLocation[] {
+  try {
+    const locationsPath = join(configDir, 'locations.json');
+    const data = readFileSync(locationsPath, 'utf-8');
+    return JSON.parse(data) as DMVLocation[];
+  } catch (error) {
+    console.error('Failed to load DMV locations:', error);
+    // Fallback to default locations
+    return [
+      { name: 'Edison', id: 52 },
+      { name: 'Rahway', id: 60 },
+      { name: 'Newark', id: 56 },
+      { name: 'Paterson', id: 59 }
+    ];
+  }
+}
+
+export function loadMonitoringRules(): MonitoringConfig {
+  try {
+    const rulesPath = join(configDir, 'monitoring-rules.json');
+    const data = readFileSync(rulesPath, 'utf-8');
+    const config = JSON.parse(data);
+    
+    // Ensure searchConfig exists
+    if (!config.searchConfig) {
+      config.searchConfig = {
+        maxWeeksAhead: 3,
+        maxDatesPerLocation: 10,
+        monthsToCheck: 2
+      };
+    }
+    
+    return config as MonitoringConfig;
+  } catch (error) {
+    console.error('Failed to load monitoring rules:', error);
+    // Fallback to default rules
+    return {
+      searchConfig: {
+        maxWeeksAhead: 3,
+        maxDatesPerLocation: 10,
+        monthsToCheck: 2
+      },
+      rules: [
+        {
+          name: 'Next 3 Weekends',
+          enabled: true,
+          days: ['Saturday', 'Sunday'],
+          timeRanges: ['all'],
+          dateRange: {
+            type: 'relative',
+            value: 'next-3-weekends'
+          }
+        }
+      ],
+      presets: {
+        all: '00:00-23:59'
+      }
+    };
+  }
+}
+
+export const DMV_LOCATIONS = loadDMVLocations();
+export const MONITORING_CONFIG = loadMonitoringRules();
+
+// For Vercel deployment, we'll use environment variables as override
+export function getDMVLocations(): DMVLocation[] {
+  if (process.env.DMV_LOCATIONS) {
+    try {
+      return JSON.parse(process.env.DMV_LOCATIONS);
+    } catch (error) {
+      console.error('Failed to parse DMV_LOCATIONS env var:', error);
+    }
+  }
+  return DMV_LOCATIONS;
+}
+
+export function getMonitoringConfig(): MonitoringConfig {
+  if (process.env.MONITORING_RULES) {
+    try {
+      return JSON.parse(process.env.MONITORING_RULES);
+    } catch (error) {
+      console.error('Failed to parse MONITORING_RULES env var:', error);
+    }
+  }
+  return MONITORING_CONFIG;
+}
